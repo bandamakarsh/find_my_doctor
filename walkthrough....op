@@ -1,0 +1,40 @@
+# SmartOP Implementation Walkthrough
+
+The initial implementation of the SmartOP application has been completed according to the architecture outlined in the implementation plan. The code is structured as a full-stack monorepo with `frontend/` and `backend/` directories.
+
+## What was built
+
+### Backend (`backend/`)
+- **Express Server**: Initialized at `backend/server.js` with integrated Socket.IO for real-time queue synchronization.
+- **MongoDB Configuration**: Connected via Mongoose in `backend/db.js` using `mongodb://127.0.0.1:27017/smartop`.
+- **Database Models**: Created `Doctor` and `Appointment` models to store clinical and booking data (`backend/models/`).
+- **REST APIs**: 
+  - `GET /api/doctors` and `GET /api/doctors/:id` to search and view doctor profiles.
+  - `POST /api/appointments` to book an appointment and automatically generate an incremental Token Number.
+  - `GET /api/queue/:doctorId` to calculate queue statistics (Current Token, Wait Time, Patients Ahead).
+- **Socket.IO Integration**: Emits `queue_updated` events whenever an appointment status changes to push updates directly to any connected patients.
+
+### Frontend (`frontend/`)
+- **Vite React App**: Set up using standard React and `react-router-dom`.
+- **Vanilla CSS Architecture**: Integrated a customized, responsive, premium UI in `frontend/src/index.css` via custom CSS properties, avoiding external frameworks.
+- **Pages**:
+  - **Home**: A hero and marketing layout explaining features.
+  - **Search**: A list of doctors fetched from the backend.
+  - **Doctor Profile**: Detailed viewer with a booking form to confirm a queue slot.
+  - **Queue Tracking (`/queue/:doctorId/:appointmentId`)**: A dedicated real-time socket viewer that automatically reflects queue changes without refreshing.
+  - **Admin Panel (`/admin`)**: A dedicated view to manually update appointment statuses (Wait, Consult, Complete) to simulate a doctor seeing patients!
+
+## Local MongoDB Required
+
+> [!WARNING]
+> Because you specified to use local MongoDB, the application is currently attempting to connect to `mongodb://127.0.0.1:27017`.
+> My attempt to seed the database and start the backend failed because your system either does not have MongoDB installed or the service is not currently running.
+
+## How to Verify and Run
+
+1. **Start Local MongoDB**: Ensure MongoDB is installed and running on default port `27017`.
+2. **Seed Database**: Open a terminal, go to `backend/`, and run `npm run seed`. This will populate placeholder doctors.
+3. **Start Backend**: In the same `backend/` terminal, run `npm start` (Runs on `http://localhost:5000`).
+4. **Start Frontend**: Open another terminal, go to `frontend/`, and run `npm run dev`.
+
+Open the Admin View locally side-by-side with the Queue Tracking View to witness the automated socket-driven UI state transitions!
