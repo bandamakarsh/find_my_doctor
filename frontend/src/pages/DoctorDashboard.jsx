@@ -13,13 +13,13 @@ const DoctorDashboard = () => {
     useEffect(() => {
         if (user && user.doctorId) {
             // Fetch today's queue
-            fetch(`http://localhost:5000/api/queue/${user.doctorId}`)
+            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/queue/${user.doctorId}`)
                 .then(res => res.json())
                 .then(data => setAppointments(data.appointments || []))
                 .catch(err => console.error("Error fetching appointments:", err));
                 
             // Fetch patient history
-            fetch(`http://localhost:5000/api/appointments/doctor/${user.doctorId}`)
+            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/appointments/doctor/${user.doctorId}`)
                 .then(res => res.json())
                 .then(data => setPatientHistory(data))
                 .catch(err => console.error("Error fetching history:", err));
@@ -28,7 +28,7 @@ const DoctorDashboard = () => {
 
     const updateStatus = async (appointmentId, status) => {
         try {
-            await fetch(`http://localhost:5000/api/appointments/${appointmentId}/status`, {
+            await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/appointments/${appointmentId}/status`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })

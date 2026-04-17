@@ -10,7 +10,7 @@ export default function QueueTracking() {
 
   const fetchQueue = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/queue/${doctorId}`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/queue/${doctorId}`);
       setQueueData(res.data);
       const me = res.data.appointments.find(a => a._id === appointmentId);
       if (me) setMyToken(me.tokenNumber);
@@ -22,7 +22,7 @@ export default function QueueTracking() {
   useEffect(() => {
     fetchQueue();
 
-    const socket = io('http://localhost:5000');
+    const socket = io(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}`);
     socket.emit('join_doctor_room', doctorId);
 
     socket.on('queue_updated', (data) => {

@@ -13,11 +13,11 @@ const PatientDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const resDoctors = await axios.get('http://localhost:5000/api/doctors');
+                const resDoctors = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors`);
                 setDoctors(resDoctors.data);
 
                 if (user?.phone) {
-                    const resApts = await axios.get(`http://localhost:5000/api/appointments/patient/${user.phone}`);
+                    const resApts = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/appointments/patient/${user.phone}`);
                     setAppointments(resApts.data);
                 }
             } catch (error) {

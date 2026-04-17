@@ -13,7 +13,7 @@ const DoctorSettings = ({ user }) => {
 
     useEffect(() => {
         if (user.doctorId) {
-            fetch(`http://localhost:5000/api/doctors/${user.doctorId}`)
+            fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors/${user.doctorId}`)
                 .then(res => res.json())
                 .then(data => {
                     setFormData({
@@ -36,7 +36,7 @@ const DoctorSettings = ({ user }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch(`http://localhost:5000/api/doctors/${user.doctorId}`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors/${user.doctorId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

@@ -8,8 +8,8 @@ export default function Admin() {
   const [appointments, setAppointments] = useState([]);
 
   const fetchDoctors = () => {
-    axios.get('http://localhost:5000/api/doctors').then(res => setDoctors(res.data));
-    axios.get('http://localhost:5000/api/doctors?pending=true').then(res => setPendingDoctors(res.data));
+    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors`).then(res => setDoctors(res.data));
+    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors?pending=true`).then(res => setPendingDoctors(res.data));
   };
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export default function Admin() {
 
   const fetchQueue = () => {
     if (!selectedDoc) return;
-    axios.get(`http://localhost:5000/api/queue/${selectedDoc}`).then(res => {
+    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/queue/${selectedDoc}`).then(res => {
       setAppointments(res.data.appointments);
     });
   };
@@ -32,7 +32,7 @@ export default function Admin() {
 
   const updateStatus = async (appId, status) => {
     try {
-      await axios.patch(`http://localhost:5000/api/appointments/${appId}/status`, { status });
+      await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/appointments/${appId}/status`, { status });
       fetchQueue();
     } catch (error) {
       console.error(error);
@@ -41,7 +41,7 @@ export default function Admin() {
 
   const approveDoctor = async (id) => {
     try {
-      await axios.patch(`http://localhost:5000/api/doctors/${id}/approve`);
+      await axios.patch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors/${id}/approve`);
       fetchDoctors(); // refresh lists
     } catch (error) {
       console.error(error);

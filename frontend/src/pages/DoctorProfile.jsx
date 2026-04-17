@@ -10,14 +10,14 @@ export default function DoctorProfile() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/doctors/${id}`).then(res => setDoctor(res.data));
+    axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/doctors/${id}`).then(res => setDoctor(res.data));
   }, [id]);
 
   const handleBook = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/appointments', {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/appointments`, {
         ...formData,
         doctorId: id
       });
