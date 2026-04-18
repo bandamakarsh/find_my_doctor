@@ -1,13 +1,14 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { User, KeyRound, Smartphone } from 'lucide-react';
+import { User, KeyRound, Mail, Smartphone } from 'lucide-react';
 
 const PatientLogin = () => {
-    const [step, setStep] = useState(1);
+    const [isLogin, setIsLogin] = useState(true);
     const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
-    const [otp, setOtp] = useState('');
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const { login, user } = useContext(AuthContext);
@@ -19,48 +20,40 @@ const PatientLogin = () => {
         }
     }, [user, navigate]);
 
-    const handleSendOTP = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setMessage('');
+
+        const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+        const payload = isLogin 
+            ? { email, password, role: 'patient' }
+            : { name, email, password, phone, role: 'patient' };
+
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/send-otp`, {
+            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone }),
+                body: JSON.stringify(payload),
             });
 
             const data = await res.json();
             if (res.ok) {
-                setMessage('OTP sent! Check the backend console.');
-                setStep(2);
+                if (isLogin) {
+                    login(data);
+                    navigate('/patient-dashboard');
+                } else {
+                    setMessage('Registration successful! Logging you in...');
+                    setTimeout(() => {
+                        login(data);
+                        navigate('/patient-dashboard');
+                    }, 1000);
+                }
             } else {
-                setError(data.message || 'Failed to send OTP');
+                setError(data.message || 'Authentication failed');
             }
         } catch (err) {
-            setError('Server error');
-        }
-    };
-
-    const handleVerifyOTP = async (e) => {
-        e.preventDefault();
-        setError('');
-        try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/verify-otp`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, otp }),
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                login(data);
-                navigate('/patient-dashboard');
-            } else {
-                setError(data.message || 'Invalid OTP');
-            }
-        } catch (err) {
-            setError('Server error');
+            setError('Server error. Please try again later.');
         }
     };
 
@@ -72,71 +65,84 @@ const PatientLogin = () => {
                         <User size={48} color="#10B981" />
                     </div>
                     <h2 style={{ fontSize: '1.8rem', color: 'white', marginBottom: '0.5rem' }}>Patient Portal</h2>
-                    <p style={{ color: '#94A3B8' }}>{step === 1 ? 'Log in securely with your mobile number' : 'Enter the verification code sent to your phone'}</p>
+                    <p style={{ color: '#94A3B8' }}>{isLogin ? 'Log in securely with your email' : 'Create a new account'}</p>
                 </div>
                 
                 {error && <div style={{ color: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', textAlign: 'center', fontWeight: '500' }}>{error}</div>}
                 {message && <div style={{ color: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1.5rem', textAlign: 'center', fontWeight: '500' }}>{message}</div>}
 
-                {step === 1 ? (
-                    <form onSubmit={handleSendOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
-                                <User size={18} /> Full Name
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="e.g. John Doe"
-                                required
-                                style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.1rem' }}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
-                                <Smartphone size={18} /> Mobile Number
-                            </label>
-                            <input
-                                type="tel"
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                placeholder="e.g. 1234567890"
-                                required
-                                style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.1rem' }}
-                            />
-                        </div>
-                        <button type="submit" style={{ padding: '1rem', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '0.75rem', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'background-color 0.2s', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.39)' }}>
-                            Send Secure Code
-                        </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handleVerifyOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
-                                <KeyRound size={18} /> 6-Digit OTP
-                            </label>
-                            <input
-                                type="text"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                placeholder="• • • • • •"
-                                maxLength="6"
-                                required
-                                style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.5rem', letterSpacing: '0.5rem', textAlign: 'center' }}
-                            />
-                        </div>
-                        <button type="submit" style={{ padding: '1rem', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '0.75rem', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'background-color 0.2s', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.39)' }}>
-                            Verify & Login
-                        </button>
-                        <button type="button" onClick={() => setStep(1)} style={{ padding: '0.75rem', backgroundColor: 'transparent', color: '#94A3B8', border: '1px solid #334155', borderRadius: '0.75rem', cursor: 'pointer', fontWeight: '500' }}>
-                            Go Back
-                        </button>
-                    </form>
-                )}
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {!isLogin && (
+                        <>
+                            <div>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
+                                    <User size={18} /> Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="e.g. John Doe"
+                                    required={!isLogin}
+                                    style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.1rem' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
+                                    <Smartphone size={18} /> Mobile Number
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    placeholder="e.g. 1234567890"
+                                    required={!isLogin}
+                                    style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.1rem' }}
+                                />
+                            </div>
+                        </>
+                    )}
+                    
+                    <div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
+                            <Mail size={18} /> Email Address
+                        </label>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="you@example.com"
+                            required
+                            style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.1rem' }}
+                        />
+                    </div>
+                    
+                    <div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', color: '#E2E8F0', fontWeight: '500' }}>
+                            <KeyRound size={18} /> Password
+                        </label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                            style={{ width: '100%', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #334155', background: 'rgba(15, 23, 42, 0.8)', color: 'white', fontSize: '1.1rem' }}
+                        />
+                    </div>
+                    
+                    <button type="submit" style={{ padding: '1rem', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '0.75rem', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'background-color 0.2s', boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.39)' }}>
+                        {isLogin ? 'Log In' : 'Sign Up'}
+                    </button>
+                    
+                    <button type="button" onClick={() => setIsLogin(!isLogin)} style={{ padding: '0.75rem', backgroundColor: 'transparent', color: '#94A3B8', border: 'none', cursor: 'pointer', fontWeight: '500' }}>
+                        {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+                    </button>
+                </form>
             </div>
         </div>
     );
 };
 
 export default PatientLogin;
+
